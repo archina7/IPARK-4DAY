@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>공종별 현장평가 조회</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --text: #1f2933; --muted: #616e7c;
+    --line: #e4e7eb; --bar: #2f6fdb; --bar-bg: #e8eefb; --err: #b42318;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171c; --card: #1d2128; --text: #e4e7eb; --muted: #9aa5b1;
+      --line: #323843; --bar: #5b8ff0; --bar-bg: #26304a; --err: #f97066;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    line-height: 1.5;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 24px 16px 40px; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; font-size: 0.9rem; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 16px; margin-bottom: 16px;
+  }
+  h2 { font-size: 1.05rem; margin: 0 0 12px; }
+  label { font-weight: 600; margin-right: 8px; }
+  select {
+    font: inherit; padding: 6px 10px; border-radius: 6px;
+    border: 1px solid var(--line); background: var(--card); color: var(--text);
+    min-width: 180px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { text-align: left; color: var(--muted); font-weight: 600; font-size: 0.9rem; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .bars { display: grid; gap: 8px; }
+  .bar-row { display: grid; grid-template-columns: 48px 1fr 52px; align-items: center; gap: 8px; }
+  .bar-track { background: var(--bar-bg); border-radius: 4px; height: 18px; overflow: hidden; }
+  .bar-fill { background: var(--bar); height: 100%; border-radius: 4px; transition: width .3s; }
+  .bar-label { color: var(--muted); font-size: 0.9rem; }
+  .bar-value { text-align: right; font-variant-numeric: tabular-nums; font-size: 0.9rem; }
+  #status { color: var(--muted); }
+  #status.error { color: var(--err); }
+  footer { color: var(--muted); font-size: 0.85rem; margin-top: 8px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>건설공사 공종별 시공사 현장평가 조회</h1>
+  <p class="sub">공종을 선택하면 연도별 평가건수와 평균점수를 보여줍니다.</p>
+
+  <p id="status">데이터를 불러오는 중입니다…</p>
+
+  <div id="content" hidden>
+    <section class="card">
+      <label for="type">공종</label>
+      <select id="type"></select>
+    </section>
+
+    <section class="card">
+      <h2 id="table-title">연도별 평가건수·평균점수</h2>
+      <table>
+        <thead>
+          <tr><th>연도</th><th class="num">평가건수</th><th class="num">평균점수</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>연도별 평가건수</h2>
+      <div id="bars" class="bars"></div>
+    </section>
+  </div>
+
+  <footer>
+    <div>출처: 국토안전관리원, 공공데이터포털</div>
+    <div id="source-detail" hidden></div>
+  </footer>
+</main>
+
+<script>
+(function () {
+  var statusEl = document.getElementById('status');
+  var contentEl = document.getElementById('content');
+  var selectEl = document.getElementById('type');
+  var tbodyEl = document.getElementById('tbody');
+  var barsEl = document.getElementById('bars');
+  var titleEl = document.getElementById('table-title');
+  var sourceEl = document.getElementById('source-detail');
+  var data = null;
+
+  function isNum(v) { return typeof v === 'number' && isFinite(v); }
+  function fmtCount(v) { return isNum(v) ? v.toLocaleString('ko-KR') : '-'; }
+  function fmtScore(v) { return isNum(v) ? v.toFixed(2) : '-'; }
+
+  function cell(tag, text, cls) {
+    var el = document.createElement(tag);
+    el.textContent = text;
+    if (cls) el.className = cls;
+    return el;
+  }
+
+  function render(typeName) {
+    var t = data.types[typeName] || {};
+    var counts = Array.isArray(t.counts) ? t.counts : [];
+    var scores = Array.isArray(t.scores) ? t.scores : [];
+    var years = data.years;
+
+    titleEl.textContent = typeName + ' — 연도별 평가건수·평균점수';
+
+    tbodyEl.replaceChildren();
+    for (var i = 0; i < years.length; i++) {
+      var tr = document.createElement('tr');
+      tr.appendChild(cell('td', String(years[i])));
+      tr.appendChild(cell('td', fmtCount(counts[i]), 'num'));
+      tr.appendChild(cell('td', fmtScore(scores[i]), 'num'));
+      tbodyEl.appendChild(tr);
+    }
+
+    var max = 0;
+    for (var j = 0; j < years.length; j++) {
+      if (isNum(counts[j]) && counts[j] > max) max = counts[j];
+    }
+    barsEl.replaceChildren();
+    for (var k = 0; k < years.length; k++) {
+      var c = counts[k];
+      var row = document.createElement('div');
+      row.className = 'bar-row';
+      row.appendChild(cell('span', String(years[k]), 'bar-label'));
+      var track = document.createElement('div');
+      track.className = 'bar-track';
+      var fill = document.createElement('div');
+      fill.className = 'bar-fill';
+      fill.style.width = (isNum(c) && max > 0 ? (c / max * 100) : 0) + '%';
+      track.appendChild(fill);
+      row.appendChild(track);
+      row.appendChild(cell('span', fmtCount(c), 'bar-value'));
+      row.title = years[k] + '년 ' + fmtCount(c) + '건';
+      barsEl.appendChild(row);
+    }
+  }
+
+  function showError(msg) {
+    statusEl.className = 'error';
+    statusEl.textContent = msg;
+    statusEl.hidden = false;
+    contentEl.hidden = true;
+  }
+
+  fetch('data.json')
+    .then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(function (json) {
+      if (!json || !Array.isArray(json.years) || !json.types || typeof json.types !== 'object') {
+        throw new Error('형식 오류');
+      }
+      var names = Object.keys(json.types);
+      if (names.length === 0) throw new Error('공종 없음');
+      data = json;
+
+      // "총계"를 맨 앞에 두고 기본 선택
+      var idx = names.indexOf('총계');
+      if (idx > 0) { names.splice(idx, 1); names.unshift('총계'); }
+      names.forEach(function (n) {
+        var opt = document.createElement('option');
+        opt.value = n;
+        opt.textContent = n;
+        selectEl.appendChild(opt);
+      });
+      selectEl.addEventListener('change', function () { render(selectEl.value); });
+
+      if (json.source) {
+        sourceEl.textContent = '데이터: ' + json.source;
+        sourceEl.hidden = false;
+      }
+
+      statusEl.hidden = true;
+      contentEl.hidden = false;
+      render(names[0]);
+    })
+    .catch(function (err) {
+      showError('data.json을 불러오지 못했습니다 (' + err.message + '). ' +
+        '파일을 직접(file://) 열면 브라우저가 fetch를 막으므로, site 폴더를 ' +
+        '로컬 웹 서버(예: VS Code Live Server, "python -m http.server")로 열어 주세요.');
+    });
+})();
+</script>
+</body>
+</html>
