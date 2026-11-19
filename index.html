@@ -3,158 +3,260 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>공종별 현장평가 조회</title>
+<title>공종별 현장평가 대시보드</title>
 <style>
   :root {
-    --bg: #f6f7f9; --card: #ffffff; --text: #1f2933; --muted: #616e7c;
-    --line: #e4e7eb; --bar: #2f6fdb; --bar-bg: #e8eefb; --err: #b42318;
-    --warn: #c4320a; --watch: #e9b62a; --watch-text: #8a5f00; --ok: #3d8b5f;
+    --bg: #f3f5f8; --card: #ffffff; --text: #1f2933; --muted: #5f6b7a;
+    --line: #e2e6eb; --bar: #2f6fdb; --bar-bg: #e8eefb; --err: #b42318;
+    --warn: #c4320a; --warn-bg: #fdeee8; --watch: #e9b62a; --watch-text: #8a5f00; --watch-bg: #fdf6e0;
+    --ok: #3d8b5f; --ok-bg: #e9f5ee; --head: #17324d; --head-text: #ffffff;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #14171c; --card: #1d2128; --text: #e4e7eb; --muted: #9aa5b1;
-      --line: #323843; --bar: #5b8ff0; --bar-bg: #26304a; --err: #f97066;
-      --warn: #f38744; --watch: #f2c94c; --watch-text: #f2c94c; --ok: #5cb784;
+      --bg: #12151a; --card: #1c2027; --text: #e4e7eb; --muted: #9aa5b1;
+      --line: #313742; --bar: #5b8ff0; --bar-bg: #26304a; --err: #f97066;
+      --warn: #f38744; --warn-bg: #3a2620; --watch: #f2c94c; --watch-text: #f2c94c; --watch-bg: #3a331d;
+      --ok: #5cb784; --ok-bg: #1f3329; --head: #0d1a28; --head-text: #e4e7eb;
     }
   }
   * { box-sizing: border-box; }
+  html, body { margin: 0; }
   body {
-    margin: 0; background: var(--bg); color: var(--text);
+    background: var(--bg); color: var(--text); line-height: 1.5; font-size: 15px;
     font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-    line-height: 1.5;
   }
-  main { max-width: 720px; margin: 0 auto; padding: 24px 16px 40px; }
-  h1 { font-size: 1.4rem; margin: 0 0 4px; }
-  .sub { color: var(--muted); margin: 0 0 20px; font-size: 0.9rem; }
+  [hidden] { display: none !important; }
+
+  /* 상단 바 */
+  .topbar {
+    background: var(--head); color: var(--head-text);
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    padding: 14px max(32px, calc((100% - 1800px) / 2 + 32px));
+  }
+  .topbar h1 { font-size: 1.35rem; margin: 0; letter-spacing: -0.01em; }
+  .topbar .sub { margin: 2px 0 0; font-size: 0.88rem; opacity: 0.8; }
+  .topbar .meta { display: flex; gap: 16px; align-items: center; font-size: 0.88rem; }
+  .topbar .meta .pill { background: rgba(255,255,255,0.14); padding: 3px 10px; border-radius: 999px; }
+  .topbar a { color: inherit; }
+
+  main { padding: 20px 32px 32px; max-width: 1800px; margin: 0 auto; }
+  #status { color: var(--muted); }
+  #status.error { color: var(--err); }
+
   .card {
-    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-    padding: 16px; margin-bottom: 16px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 20px; min-width: 0;
   }
-  h2 { font-size: 1.05rem; margin: 0 0 12px; }
-  label { font-weight: 600; margin-right: 8px; }
+  h2 { font-size: 1.08rem; margin: 0 0 4px; }
+  .hint { color: var(--muted); font-size: 0.85rem; margin: 0 0 12px; }
+
+  /* KPI */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+  .kpi .label { color: var(--muted); font-size: 0.88rem; font-weight: 600; }
+  .kpi .value { font-size: 2.1rem; font-weight: 700; line-height: 1.2; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .kpi .value small { font-size: 1rem; font-weight: 600; color: var(--muted); margin-left: 2px; }
+  .kpi .foot { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+  .dist { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+  .dist span { font-size: 1.05rem; font-weight: 700; padding: 4px 12px; border-radius: 8px; }
+  .dist .d-warn { background: var(--warn-bg); color: var(--warn); }
+  .dist .d-watch { background: var(--watch-bg); color: var(--watch-text); }
+  .dist .d-ok { background: var(--ok-bg); color: var(--ok); }
+
+  /* 결론 한 줄 */
+  .conclusion {
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    border-left: 6px solid var(--warn); margin-bottom: 16px; font-size: 1.02rem;
+  }
+  .conclusion.lv-watch { border-left-color: var(--watch); }
+  .conclusion.lv-ok { border-left-color: var(--ok); }
+  .conclusion b { font-weight: 700; }
+
+  /* 판정 카드 */
+  .section { margin-bottom: 16px; }
+  .verdicts { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 12px; }
+  .verdict {
+    border: 1px solid var(--line); border-top: 5px solid var(--ok); border-radius: 10px;
+    padding: 12px 14px; cursor: pointer; background: var(--card); outline: none;
+    transition: box-shadow .15s, transform .15s;
+  }
+  .verdict:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+  .verdict:focus-visible, .verdict.sel { box-shadow: 0 0 0 2px var(--bar); }
+  .verdict.lv-warn { border-top-color: var(--warn); background: linear-gradient(var(--warn-bg), var(--card) 60%); }
+  .verdict.lv-watch { border-top-color: var(--watch); background: linear-gradient(var(--watch-bg), var(--card) 60%); }
+  .verdict .top { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+  .badge { font-size: 0.78rem; font-weight: 700; padding: 2px 10px; border-radius: 999px; color: #fff; background: var(--ok); }
+  .lv-warn .badge { background: var(--warn); }
+  .lv-watch .badge { background: var(--watch); color: #1f2933; }
+  .rank { color: var(--watch-text); font-size: 0.78rem; font-weight: 600; }
+  .verdict .name { font-weight: 700; font-size: 1.02rem; margin-top: 6px; }
+  .verdict .score { font-size: 1.7rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .verdict .score small { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+  .verdict .facts { display: grid; grid-template-columns: auto 1fr; gap: 0 10px; font-size: 0.85rem; margin-top: 6px; }
+  .verdict .facts dt { color: var(--muted); }
+  .verdict .facts dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .verdict details { margin-top: 8px; font-size: 0.82rem; color: var(--muted); }
+  .verdict summary { cursor: pointer; color: var(--bar); font-weight: 600; }
+  .verdict details ul { margin: 4px 0 0; padding-left: 18px; }
+
+  /* 본문 격자 */
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  label { font-weight: 600; margin-right: 8px; font-size: 0.9rem; }
   select {
     font: inherit; padding: 6px 10px; border-radius: 6px;
-    border: 1px solid var(--line); background: var(--card); color: var(--text);
-    min-width: 180px;
+    border: 1px solid var(--line); background: var(--card); color: var(--text); min-width: 200px;
   }
-  table { width: 100%; border-collapse: collapse; }
+
+  .chart svg { width: 100%; height: auto; display: block; }
+  .chart .grid { stroke: var(--line); }
+  .chart text { fill: var(--muted); font-size: 14px; }
+  .chart .l-sel { stroke: var(--bar); stroke-width: 3; fill: none; }
+  .chart .l-tot { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 4; fill: none; }
+  .chart .pt { fill: var(--bar); }
+  .chart .pt.small { fill: var(--card); stroke: var(--bar); stroke-width: 2; }
+  .chart .lbl { fill: var(--text); font-size: 14px; font-weight: 700; }
+  .legend { display: flex; gap: 16px; font-size: 0.84rem; color: var(--muted); margin-top: 8px; flex-wrap: wrap; }
+  .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
   th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); }
-  th { text-align: left; color: var(--muted); font-weight: 600; font-size: 0.9rem; }
+  th { text-align: left; color: var(--muted); font-weight: 600; font-size: 0.86rem; }
+  tbody tr:last-child td { font-weight: 700; }
   .num { text-align: right; font-variant-numeric: tabular-nums; }
+
   .bars { display: grid; gap: 8px; }
-  .bar-row { display: grid; grid-template-columns: 48px 1fr 52px; align-items: center; gap: 8px; }
-  .bar-track { background: var(--bar-bg); border-radius: 4px; height: 18px; overflow: hidden; }
+  .bar-row { display: grid; grid-template-columns: 48px 1fr 56px; align-items: center; gap: 8px; }
+  .bar-track { background: var(--bar-bg); border-radius: 4px; height: 20px; overflow: hidden; }
   .bar-fill { background: var(--bar); height: 100%; border-radius: 4px; transition: width .3s; }
   .bar-label { color: var(--muted); font-size: 0.9rem; }
   .bar-value { text-align: right; font-variant-numeric: tabular-nums; font-size: 0.9rem; }
-  #status { color: var(--muted); }
-  #status.error { color: var(--err); }
-  footer { color: var(--muted); font-size: 0.85rem; margin-top: 8px; }
-  [hidden] { display: none !important; }
 
-  .hint { color: var(--muted); font-size: 0.85rem; margin: -6px 0 12px; }
-  .verdicts { display: grid; gap: 10px; }
-  .verdict {
-    display: block; width: 100%; text-align: left; font: inherit; color: inherit;
-    background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--ok);
-    border-radius: 8px; padding: 10px 12px; cursor: pointer;
-  }
-  .verdict:hover, .verdict:focus-visible { border-color: var(--bar); outline: none; }
-  .verdict.sel { box-shadow: 0 0 0 2px var(--bar); }
-  .verdict.lv-warn { border-left-color: var(--warn); }
-  .verdict.lv-watch { border-left-color: var(--watch); }
-  .verdict .top { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
-  .badge { font-size: 0.75rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; color: #fff; background: var(--ok); }
-  .lv-warn .badge { background: var(--warn); }
-  .lv-watch .badge { background: var(--watch); color: #1f2933; }
-  .verdict .name { font-weight: 700; }
-  .verdict .head { font-size: 0.88rem; margin-top: 2px; }
-  .verdict ul { margin: 6px 0 0; padding-left: 18px; font-size: 0.82rem; color: var(--muted); }
-  .chart svg { width: 100%; height: auto; display: block; }
-  .chart .grid { stroke: var(--line); }
-  .chart text { fill: var(--muted); font-size: 11px; }
-  .chart .l-sel { stroke: var(--bar); stroke-width: 2.5; fill: none; }
-  .chart .l-tot { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 3; fill: none; }
-  .chart .pt { fill: var(--bar); }
-  .chart .pt.small { fill: var(--card); stroke: var(--bar); stroke-width: 2; }
-  .chart .lbl { fill: var(--text); font-size: 11px; font-weight: 600; }
-  .legend { display: flex; gap: 14px; font-size: 0.82rem; color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
-  .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
-  .ss-row { display: grid; grid-template-columns: 40px 1fr 60px; gap: 8px; align-items: center; font-size: 0.85rem; }
-  .ss-track { position: relative; height: 22px; }
+  .ss-row { display: grid; grid-template-columns: 44px 1fr 62px; gap: 8px; align-items: center; font-size: 0.88rem; }
+  .ss-track { position: relative; height: 24px; }
   .ss-mid { position: absolute; left: 50%; top: 0; bottom: 0; border-left: 1px solid var(--muted); }
-  .ss-bar { position: absolute; height: 9px; border-radius: 2px; }
+  .ss-bar { position: absolute; height: 10px; border-radius: 2px; }
   .ss-bar.w { top: 1px; background: var(--bar); }
-  .ss-bar.c { top: 12px; background: var(--watch); }
-  .ss-val { text-align: right; font-variant-numeric: tabular-nums; }
-  .note { font-size: 0.85rem; background: var(--bar-bg); border-radius: 6px; padding: 8px 10px; margin-top: 12px; }
+  .ss-bar.c { top: 13px; background: var(--watch); }
+  .ss-val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .note { font-size: 0.86rem; background: var(--bar-bg); border-radius: 8px; padding: 10px 12px; margin-top: 12px; }
   .neg { color: var(--warn); }
   .small-mark { color: var(--watch-text); font-size: 0.78rem; margin-left: 4px; }
+
+  footer { color: var(--muted); font-size: 0.82rem; padding: 0 32px 24px; max-width: 1800px; margin: 0 auto; }
+  footer div + div { margin-top: 2px; }
+
+  @media (max-width: 1100px) {
+    .grid2 { grid-template-columns: 1fr; }
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .topbar, main, footer { padding-left: 16px; padding-right: 16px; }
+    .kpis { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
-<main>
-  <h1>건설공사 공종별 시공사 현장평가 조회</h1>
-  <p class="sub">어느 공종의 점수가 실제로 떨어지고 있는지, 그게 믿을 만한 신호인지 보여줍니다.</p>
+<header class="topbar">
+  <div>
+    <h1>건설공사 공종별 시공사 현장평가 대시보드</h1>
+    <p class="sub">어느 공종의 점수가 실제로 떨어지고 있는지, 그게 믿을 만한 신호인지 보여줍니다.</p>
+  </div>
+  <div class="meta">
+    <span class="pill" id="latest-pill" hidden></span>
+    <a href="/logout">로그아웃</a>
+  </div>
+</header>
 
+<main>
   <p id="status">데이터를 불러오는 중입니다…</p>
 
   <div id="content" hidden>
-    <section class="card" id="focus-card" hidden>
-      <h2>지금 들여다볼 공종</h2>
+    <!-- 1. 핵심 숫자 -->
+    <section class="kpis" aria-label="핵심 지표">
+      <div class="card kpi">
+        <div class="label" id="k-score-label">총계 평균점수</div>
+        <div class="value" id="k-score">-</div>
+        <div class="foot" id="k-score-foot"></div>
+      </div>
+      <div class="card kpi">
+        <div class="label">전년 대비</div>
+        <div class="value" id="k-yoy">-</div>
+        <div class="foot" id="k-yoy-foot"></div>
+      </div>
+      <div class="card kpi">
+        <div class="label" id="k-count-label">평가건수</div>
+        <div class="value" id="k-count">-</div>
+        <div class="foot" id="k-count-foot"></div>
+      </div>
+      <div class="card kpi">
+        <div class="label">공종 판정</div>
+        <div class="dist" id="k-dist"></div>
+        <div class="foot" id="k-dist-foot"></div>
+      </div>
+    </section>
+
+    <!-- 2. 결론 한 줄 -->
+    <section class="card conclusion" id="conclusion" hidden></section>
+
+    <!-- 3. 공종별 판정 -->
+    <section class="card section" id="focus-card" hidden>
+      <h2>공종별 판정</h2>
       <p class="hint" id="focus-hint"></p>
       <div id="verdicts" class="verdicts"></div>
     </section>
 
-    <section class="card">
-      <label for="type">공종</label>
-      <select id="type"></select>
-    </section>
+    <!-- 4. 추이 + 총계 변화 원인 -->
+    <div class="grid2">
+      <section class="card chart">
+        <div class="card-head">
+          <h2 id="chart-title">평균점수 추이</h2>
+          <div><label for="type">공종</label><select id="type"></select></div>
+        </div>
+        <div id="chart"></div>
+        <div class="legend">
+          <span><span class="sw" style="background:var(--bar)"></span>선택 공종</span>
+          <span id="lg-total"><span class="sw" style="background:var(--muted)"></span>총계(점선)</span>
+          <span>빈 점: 평가 10건 미만(평균이 흔들리기 쉬움)</span>
+        </div>
+      </section>
 
-    <section class="card chart">
-      <h2 id="chart-title">평균점수 추이</h2>
-      <div id="chart"></div>
-      <div class="legend">
-        <span><span class="sw" style="background:var(--bar)"></span>선택 공종</span>
-        <span id="lg-total"><span class="sw" style="background:var(--muted)"></span>총계(점선)</span>
-        <span>빈 점: 평가 10건 미만(평균이 흔들리기 쉬움)</span>
-      </div>
-    </section>
+      <section class="card" id="ss-card" hidden>
+        <h2>총계 점수는 왜 바뀌었나</h2>
+        <p class="hint">전년 대비 총계 변화를 <b>공종 내부 점수 변화</b>와 <b>공종 구성(건수 비중) 변화</b>로 나눴습니다. 오른쪽 숫자가 두 효과의 합입니다.</p>
+        <div class="legend" style="margin:0 0 8px">
+          <span><span class="sw" style="background:var(--bar)"></span>공종 내부 효과</span>
+          <span><span class="sw" style="background:var(--watch)"></span>구성 효과</span>
+        </div>
+        <div id="ss" class="bars"></div>
+        <div class="note" id="ss-note"></div>
+      </section>
+    </div>
 
-    <section class="card" id="ss-card" hidden>
-      <h2>총계 점수는 왜 바뀌었나</h2>
-      <p class="hint">전년 대비 총계 변화를 <b>공종 내부 점수 변화</b>와 <b>공종 구성(건수 비중) 변화</b>로 나눴습니다. 두 효과의 합이 오른쪽 숫자입니다.</p>
-      <div class="legend" style="margin:0 0 8px">
-        <span><span class="sw" style="background:var(--bar)"></span>공종 내부 효과</span>
-        <span><span class="sw" style="background:var(--watch)"></span>구성 효과</span>
-      </div>
-      <div id="ss" class="bars"></div>
-      <div class="note" id="ss-note"></div>
-    </section>
+    <!-- 5. 세부 표 + 건수 -->
+    <div class="grid2">
+      <section class="card">
+        <h2 id="table-title">연도별 평가건수·평균점수</h2>
+        <table>
+          <thead>
+            <tr><th>연도</th><th class="num">평가건수</th><th class="num">평균점수</th><th class="num">전년 대비</th></tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </section>
 
-    <section class="card">
-      <h2 id="table-title">연도별 평가건수·평균점수</h2>
-      <table>
-        <thead>
-          <tr><th>연도</th><th class="num">평가건수</th><th class="num">평균점수</th><th class="num">전년 대비</th></tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </section>
-
-    <section class="card">
-      <h2>연도별 평가건수</h2>
-      <div id="bars" class="bars"></div>
-    </section>
+      <section class="card">
+        <h2 id="bars-title">연도별 평가건수</h2>
+        <div id="bars" class="bars"></div>
+      </section>
+    </div>
   </div>
-
-  <footer>
-    <div>출처: 국토안전관리원, 공공데이터포털</div>
-    <div id="source-detail" hidden></div>
-    <div id="method" hidden></div>
-    <div><a href="/logout" style="color:inherit">로그아웃</a></div>
-  </footer>
 </main>
+
+<footer>
+  <div>출처: 국토안전관리원, 공공데이터포털</div>
+  <div id="source-detail" hidden></div>
+  <div id="method" hidden></div>
+</footer>
 
 <script>
 (function () {
@@ -165,13 +267,12 @@
   var selectEl = document.getElementById('type');
   var tbodyEl = document.getElementById('tbody');
   var barsEl = document.getElementById('bars');
-  var titleEl = document.getElementById('table-title');
-  var sourceEl = document.getElementById('source-detail');
   var chartEl = document.getElementById('chart');
   var verdictsEl = document.getElementById('verdicts');
   var data = null;
   var smallN = 10;
 
+  function $(id) { return document.getElementById(id); }
   function isNum(v) { return typeof v === 'number' && isFinite(v); }
   function fmtCount(v) { return isNum(v) ? v.toLocaleString('ko-KR') : '-'; }
   function fmtScore(v) { return isNum(v) ? v.toFixed(2) : '-'; }
@@ -190,13 +291,70 @@
     return el;
   }
 
+  // 1. 핵심 숫자 + 결론 한 줄 (모두 data.json 값으로만 만든다)
+  function renderSummary(a) {
+    var years = data.years;
+    var last = years.length - 1;
+    var lastYear = years[last];
+    var tot = data.types['총계'];
+    if (!tot) return;
+    var s = tot.scores || [], c = tot.counts || [];
+    var yoy = last > 0 && isNum(s[last]) && isNum(s[last - 1]) ? s[last] - s[last - 1] : null;
+    var dc = last > 0 && isNum(c[last]) && isNum(c[last - 1]) ? c[last] - c[last - 1] : null;
+
+    $('latest-pill').textContent = '기준 ' + lastYear + '년 · ' + years[0] + '–' + lastYear + ' 자료';
+    $('latest-pill').hidden = false;
+
+    $('k-score-label').textContent = lastYear + '년 총계 평균점수';
+    $('k-score').replaceChildren(document.createTextNode(fmtScore(s[last])), cell('small', '점'));
+    var tv = a && a.total_verdict;
+    $('k-score-foot').textContent = tv && isNum(tv.baseline)
+      ? '직전 ' + a.params.baseline_years + '년 평균 ' + fmtScore(tv.baseline) + '점 대비 ' + fmtSigned(tv.delta)
+      : '';
+
+    $('k-yoy').textContent = fmtSigned(yoy);
+    $('k-yoy').className = 'value' + (yoy !== null && yoy < 0 ? ' neg' : '');
+    $('k-yoy-foot').textContent = last > 0 ? years[last - 1] + '년 ' + fmtScore(s[last - 1]) + '점 → ' + lastYear + '년' : '';
+
+    $('k-count-label').textContent = lastYear + '년 평가건수';
+    $('k-count').replaceChildren(document.createTextNode(fmtCount(c[last])), cell('small', '건'));
+    $('k-count-foot').textContent = dc !== null ? '전년 대비 ' + (dc > 0 ? '+' : dc < 0 ? '−' : '') + Math.abs(dc) + '건' : '';
+
+    if (a && Array.isArray(a.verdicts)) {
+      var n = { '주의': 0, '관찰': 0, '정상': 0 };
+      a.verdicts.forEach(function (v) { if (v.level in n) n[v.level]++; });
+      $('k-dist').replaceChildren(
+        cell('span', '주의 ' + n['주의'], 'd-warn'),
+        cell('span', '관찰 ' + n['관찰'], 'd-watch'),
+        cell('span', '정상 ' + n['정상'], 'd-ok'));
+      $('k-dist-foot').textContent = '공종 ' + a.verdicts.length + '개 기준';
+
+      var focus = a.focus || [];
+      var box = $('conclusion');
+      var lv = tv ? tv.level : (n['주의'] ? '주의' : n['관찰'] ? '관찰' : '정상');
+      box.className = 'card conclusion ' + (LEVEL_CLASS[lv] || '');
+      box.replaceChildren();
+      box.appendChild(cell('span', '총계 ' + lv, 'badge'));
+      var p = document.createElement('span');
+      p.appendChild(document.createTextNode(lastYear + '년 총계 ' + fmtScore(s[last]) + '점(전년 대비 ' + fmtSigned(yoy) + '). '));
+      if (focus.length) {
+        p.appendChild(document.createTextNode('우선 점검: '));
+        p.appendChild(cell('b', focus.join(', ')));
+      } else {
+        p.appendChild(document.createTextNode('점검이 필요한 공종은 없습니다.'));
+      }
+      box.appendChild(p);
+      box.hidden = false;
+    }
+  }
+
   function renderChart(typeName) {
     var years = data.years;
     var sel = data.types[typeName] || {};
     var tot = data.types['총계'];
     var showTot = typeName !== '총계' && tot;
-    document.getElementById('lg-total').hidden = !showTot;
-    document.getElementById('chart-title').textContent = typeName + ' — 평균점수 추이';
+    $('lg-total').hidden = !showTot;
+    $('chart-title').textContent = typeName + ' — 평균점수 추이';
 
     var all = [];
     [sel, showTot ? tot : null].forEach(function (t) {
@@ -205,7 +363,7 @@
     if (!all.length) { chartEl.replaceChildren(); return; }
     var lo = Math.floor((Math.min.apply(null, all) - 2) / 5) * 5;
     var hi = Math.ceil((Math.max.apply(null, all) + 2) / 5) * 5;
-    var W = 640, H = 240, L = 34, R = 12, T = 16, B = 26;
+    var W = 900, H = 330, L = 42, R = 16, T = 20, B = 28;
     function x(i) { return L + (W - L - R) * (years.length === 1 ? 0.5 : i / (years.length - 1)); }
     function y(v) { return T + (H - T - B) * (1 - (v - lo) / (hi - lo)); }
 
@@ -229,47 +387,78 @@
       if (!isNum(v)) return;
       var n = (sel.counts || [])[i];
       var small = isNum(n) && n < smallN;
-      var c = svg('circle', { cx: x(i), cy: y(v), r: 4.5, 'class': 'pt' + (small ? ' small' : '') });
+      var c = svg('circle', { cx: x(i), cy: y(v), r: 5, 'class': 'pt' + (small ? ' small' : '') });
       c.appendChild(svg('title', {}, years[i] + '년 ' + fmtScore(v) + '점 · ' + fmtCount(n) + '건' + (small ? ' (표본 적음)' : '')));
       root.appendChild(c);
+      root.appendChild(svg('text', { x: x(i), y: y(v) - 11, 'text-anchor': 'middle', 'class': 'lbl' }, v.toFixed(1)));
     });
-    var last = (sel.scores || []).length - 1;
-    if (last >= 0 && isNum(sel.scores[last])) {
-      root.appendChild(svg('text', { x: x(last) - 8, y: y(sel.scores[last]) - 9, 'text-anchor': 'end', 'class': 'lbl' },
-        fmtScore(sel.scores[last])));
-    }
     chartEl.replaceChildren(root);
   }
 
   function renderVerdicts(a) {
     if (!a || !Array.isArray(a.verdicts) || !a.verdicts.length) return;
     var focus = a.focus || [];
-    var tv = a.total_verdict;
-    document.getElementById('focus-hint').textContent =
-      (tv ? '총계 ' + tv.headline + '. ' : '') +
-      '판정 기준: 최근 연도 점수를 직전 ' + (a.params.baseline_years) + '년 평균과 비교해 ' +
-      a.params.warn_drop + '점 이하면 주의, ' + a.params.watch_drop + '점 이하이거나 2년 연속 하락이면 관찰. 카드를 누르면 아래 차트가 바뀝니다.';
+    $('focus-hint').textContent =
+      '최근 연도 점수를 직전 ' + a.params.baseline_years + '년 평균과 비교해 ' +
+      a.params.warn_drop + '점 이하면 주의, ' + a.params.watch_drop + '점 이하이거나 2년 연속 하락이면 관찰입니다. ' +
+      '카드를 누르면 아래 차트와 표가 그 공종으로 바뀝니다.';
     verdictsEl.replaceChildren();
     a.verdicts.forEach(function (v) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'verdict ' + (LEVEL_CLASS[v.level] || '');
-      b.dataset.type = v.type;
+      var card = document.createElement('article');
+      card.className = 'verdict ' + (LEVEL_CLASS[v.level] || '');
+      card.dataset.type = v.type;
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', v.type + ' ' + v.level + ', 차트에서 보기');
+
       var top = document.createElement('div');
       top.className = 'top';
       top.appendChild(cell('span', v.level, 'badge'));
-      top.appendChild(cell('span', v.type, 'name'));
-      if (focus.indexOf(v.type) >= 0) top.appendChild(cell('span', '우선 점검 ' + (focus.indexOf(v.type) + 1), 'small-mark'));
-      b.appendChild(top);
-      b.appendChild(cell('div', v.headline, 'head'));
-      var ul = document.createElement('ul');
-      (v['for'] || []).forEach(function (r) { ul.appendChild(cell('li', '나빠짐 근거: ' + r)); });
-      (v.against || []).forEach(function (r) { ul.appendChild(cell('li', '반대 근거: ' + r)); });
-      if (ul.children.length) b.appendChild(ul);
-      b.addEventListener('click', function () { selectEl.value = v.type; render(v.type); });
-      verdictsEl.appendChild(b);
+      var r = focus.indexOf(v.type);
+      if (r >= 0) top.appendChild(cell('span', '우선 점검 ' + (r + 1), 'rank'));
+      card.appendChild(top);
+      card.appendChild(cell('div', v.type, 'name'));
+
+      var sc = cell('div', fmtScore(v.latest), 'score');
+      sc.appendChild(cell('small', ' 점'));
+      card.appendChild(sc);
+
+      var dl = document.createElement('dl');
+      dl.className = 'facts';
+      [['직전 ' + a.params.baseline_years + '년 평균 대비', v.delta, true],
+       ['전년 대비', v.yoy, true],
+       ['평가건수', v.n_latest, false]].forEach(function (f) {
+        dl.appendChild(cell('dt', f[0]));
+        var dd = cell('dd', f[2] ? fmtSigned(f[1]) : fmtCount(f[1]) + '건', f[2] && f[1] < 0 ? 'neg' : '');
+        if (!f[2] && v.small_sample) dd.appendChild(cell('span', '표본 적음', 'small-mark'));
+        dl.appendChild(dd);
+      });
+      card.appendChild(dl);
+
+      var reasons = [];
+      (v['for'] || []).forEach(function (t) { reasons.push('나빠짐 근거: ' + t); });
+      (v.against || []).forEach(function (t) { reasons.push('반대 근거: ' + t); });
+      if (reasons.length) {
+        var det = document.createElement('details');
+        det.appendChild(cell('summary', '근거 보기'));
+        var ul = document.createElement('ul');
+        reasons.forEach(function (t) { ul.appendChild(cell('li', t)); });
+        det.appendChild(ul);
+        card.appendChild(det);
+      }
+
+      function pick(e) {
+        if (e.target.closest && e.target.closest('details')) return; // 근거 펼치기는 선택과 따로
+        selectEl.value = v.type;
+        render(v.type);
+      }
+      card.addEventListener('click', pick);
+      card.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(e); }
+      });
+      verdictsEl.appendChild(card);
     });
-    document.getElementById('focus-card').hidden = false;
+    $('focus-card').hidden = false;
   }
 
   function renderShiftShare(a) {
@@ -277,7 +466,7 @@
     var rows = a.shift_share;
     var max = 0;
     rows.forEach(function (r) { max = Math.max(max, Math.abs(r.within), Math.abs(r.composition)); });
-    var ss = document.getElementById('ss');
+    var ss = $('ss');
     ss.replaceChildren();
     rows.forEach(function (r) {
       var row = document.createElement('div');
@@ -312,8 +501,8 @@
       txt += ' ' + offset.year + '년은 총계가 ' + fmtSigned(offset.change) + '로 거의 그대로지만, 내부 효과 ' +
         fmtSigned(offset.within) + '를 구성 효과 ' + fmtSigned(offset.composition) + '가 상쇄했습니다.';
     }
-    document.getElementById('ss-note').textContent = txt;
-    document.getElementById('ss-card').hidden = false;
+    $('ss-note').textContent = txt;
+    $('ss-card').hidden = false;
   }
 
   function render(typeName) {
@@ -322,7 +511,8 @@
     var scores = Array.isArray(t.scores) ? t.scores : [];
     var years = data.years;
 
-    titleEl.textContent = typeName + ' — 연도별 평가건수·평균점수';
+    $('table-title').textContent = typeName + ' — 연도별 평가건수·평균점수';
+    $('bars-title').textContent = typeName + ' — 연도별 평가건수';
     Array.prototype.forEach.call(verdictsEl.children, function (b) {
       b.classList.toggle('sel', b.dataset.type === typeName);
     });
@@ -398,16 +588,17 @@
       selectEl.addEventListener('change', function () { render(selectEl.value); });
 
       if (json.source) {
-        sourceEl.textContent = '데이터: ' + json.source;
-        sourceEl.hidden = false;
+        $('source-detail').textContent = '데이터: ' + json.source;
+        $('source-detail').hidden = false;
       }
       if (a && a.method_note) {
-        var m = document.getElementById('method');
-        m.textContent = '분석 방법: ' + a.method_note;
-        m.hidden = false;
+        $('method').textContent = '분석 방법: ' + a.method_note;
+        $('method').hidden = false;
       }
 
-      try { renderVerdicts(a); } catch (e) { /* 분석 블록이 없어도 기본 화면은 보여준다 */ }
+      // 분석 블록이 없거나 깨져도 기본 화면(차트·표)은 보여준다
+      try { renderSummary(a); } catch (e) { }
+      try { renderVerdicts(a); } catch (e) { }
       try { renderShiftShare(a); } catch (e) { }
 
       statusEl.hidden = true;
