@@ -168,7 +168,7 @@
   </div>
   <div class="meta">
     <span class="pill" id="latest-pill" hidden></span>
-    <a href="/admin" id="admin-link" class="admin-btn" hidden>인증 등록관리<span class="admin-badge" id="admin-badge" hidden></span></a>
+    <a href="/admin" id="admin-link" class="admin-btn" hidden>관리<span class="admin-badge" id="admin-badge" hidden></span></a>
     <a href="/logout">로그아웃</a>
   </div>
 </header>
@@ -618,7 +618,7 @@
     });
 })();
 
-// 관리자에게만 '인증 등록관리' 버튼과 승인 대기 건수를 보여준다
+// 관리자에게만 '관리' 버튼과 승인 대기 건수를 보여준다
 fetch('/api/me', { headers: { Accept: 'application/json' } })
   .then(function (r) { return r.ok ? r.json() : null; })
   .then(function (me) {
