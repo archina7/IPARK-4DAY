@@ -8,11 +8,13 @@
   :root {
     --bg: #f6f7f9; --card: #ffffff; --text: #1f2933; --muted: #616e7c;
     --line: #e4e7eb; --bar: #2f6fdb; --bar-bg: #e8eefb; --err: #b42318;
+    --warn: #c4320a; --watch: #e9b62a; --watch-text: #8a5f00; --ok: #3d8b5f;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #14171c; --card: #1d2128; --text: #e4e7eb; --muted: #9aa5b1;
       --line: #323843; --bar: #5b8ff0; --bar-bg: #26304a; --err: #f97066;
+      --warn: #f38744; --watch: #f2c94c; --watch-text: #f2c94c; --ok: #5cb784;
     }
   }
   * { box-sizing: border-box; }
@@ -49,26 +51,92 @@
   #status.error { color: var(--err); }
   footer { color: var(--muted); font-size: 0.85rem; margin-top: 8px; }
   [hidden] { display: none !important; }
+
+  .hint { color: var(--muted); font-size: 0.85rem; margin: -6px 0 12px; }
+  .verdicts { display: grid; gap: 10px; }
+  .verdict {
+    display: block; width: 100%; text-align: left; font: inherit; color: inherit;
+    background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--ok);
+    border-radius: 8px; padding: 10px 12px; cursor: pointer;
+  }
+  .verdict:hover, .verdict:focus-visible { border-color: var(--bar); outline: none; }
+  .verdict.sel { box-shadow: 0 0 0 2px var(--bar); }
+  .verdict.lv-warn { border-left-color: var(--warn); }
+  .verdict.lv-watch { border-left-color: var(--watch); }
+  .verdict .top { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .badge { font-size: 0.75rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; color: #fff; background: var(--ok); }
+  .lv-warn .badge { background: var(--warn); }
+  .lv-watch .badge { background: var(--watch); color: #1f2933; }
+  .verdict .name { font-weight: 700; }
+  .verdict .head { font-size: 0.88rem; margin-top: 2px; }
+  .verdict ul { margin: 6px 0 0; padding-left: 18px; font-size: 0.82rem; color: var(--muted); }
+  .chart svg { width: 100%; height: auto; display: block; }
+  .chart .grid { stroke: var(--line); }
+  .chart text { fill: var(--muted); font-size: 11px; }
+  .chart .l-sel { stroke: var(--bar); stroke-width: 2.5; fill: none; }
+  .chart .l-tot { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 3; fill: none; }
+  .chart .pt { fill: var(--bar); }
+  .chart .pt.small { fill: var(--card); stroke: var(--bar); stroke-width: 2; }
+  .chart .lbl { fill: var(--text); font-size: 11px; font-weight: 600; }
+  .legend { display: flex; gap: 14px; font-size: 0.82rem; color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
+  .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  .ss-row { display: grid; grid-template-columns: 40px 1fr 60px; gap: 8px; align-items: center; font-size: 0.85rem; }
+  .ss-track { position: relative; height: 22px; }
+  .ss-mid { position: absolute; left: 50%; top: 0; bottom: 0; border-left: 1px solid var(--muted); }
+  .ss-bar { position: absolute; height: 9px; border-radius: 2px; }
+  .ss-bar.w { top: 1px; background: var(--bar); }
+  .ss-bar.c { top: 12px; background: var(--watch); }
+  .ss-val { text-align: right; font-variant-numeric: tabular-nums; }
+  .note { font-size: 0.85rem; background: var(--bar-bg); border-radius: 6px; padding: 8px 10px; margin-top: 12px; }
+  .neg { color: var(--warn); }
+  .small-mark { color: var(--watch-text); font-size: 0.78rem; margin-left: 4px; }
 </style>
 </head>
 <body>
 <main>
   <h1>건설공사 공종별 시공사 현장평가 조회</h1>
-  <p class="sub">공종을 선택하면 연도별 평가건수와 평균점수를 보여줍니다.</p>
+  <p class="sub">어느 공종의 점수가 실제로 떨어지고 있는지, 그게 믿을 만한 신호인지 보여줍니다.</p>
 
   <p id="status">데이터를 불러오는 중입니다…</p>
 
   <div id="content" hidden>
+    <section class="card" id="focus-card" hidden>
+      <h2>지금 들여다볼 공종</h2>
+      <p class="hint" id="focus-hint"></p>
+      <div id="verdicts" class="verdicts"></div>
+    </section>
+
     <section class="card">
       <label for="type">공종</label>
       <select id="type"></select>
+    </section>
+
+    <section class="card chart">
+      <h2 id="chart-title">평균점수 추이</h2>
+      <div id="chart"></div>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--bar)"></span>선택 공종</span>
+        <span id="lg-total"><span class="sw" style="background:var(--muted)"></span>총계(점선)</span>
+        <span>빈 점: 평가 10건 미만(평균이 흔들리기 쉬움)</span>
+      </div>
+    </section>
+
+    <section class="card" id="ss-card" hidden>
+      <h2>총계 점수는 왜 바뀌었나</h2>
+      <p class="hint">전년 대비 총계 변화를 <b>공종 내부 점수 변화</b>와 <b>공종 구성(건수 비중) 변화</b>로 나눴습니다. 두 효과의 합이 오른쪽 숫자입니다.</p>
+      <div class="legend" style="margin:0 0 8px">
+        <span><span class="sw" style="background:var(--bar)"></span>공종 내부 효과</span>
+        <span><span class="sw" style="background:var(--watch)"></span>구성 효과</span>
+      </div>
+      <div id="ss" class="bars"></div>
+      <div class="note" id="ss-note"></div>
     </section>
 
     <section class="card">
       <h2 id="table-title">연도별 평가건수·평균점수</h2>
       <table>
         <thead>
-          <tr><th>연도</th><th class="num">평가건수</th><th class="num">평균점수</th></tr>
+          <tr><th>연도</th><th class="num">평가건수</th><th class="num">평균점수</th><th class="num">전년 대비</th></tr>
         </thead>
         <tbody id="tbody"></tbody>
       </table>
@@ -83,12 +151,15 @@
   <footer>
     <div>출처: 국토안전관리원, 공공데이터포털</div>
     <div id="source-detail" hidden></div>
+    <div id="method" hidden></div>
     <div><a href="/logout" style="color:inherit">로그아웃</a></div>
   </footer>
 </main>
 
 <script>
 (function () {
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  var LEVEL_CLASS = { '주의': 'lv-warn', '관찰': 'lv-watch', '정상': 'lv-ok' };
   var statusEl = document.getElementById('status');
   var contentEl = document.getElementById('content');
   var selectEl = document.getElementById('type');
@@ -96,17 +167,153 @@
   var barsEl = document.getElementById('bars');
   var titleEl = document.getElementById('table-title');
   var sourceEl = document.getElementById('source-detail');
+  var chartEl = document.getElementById('chart');
+  var verdictsEl = document.getElementById('verdicts');
   var data = null;
+  var smallN = 10;
 
   function isNum(v) { return typeof v === 'number' && isFinite(v); }
   function fmtCount(v) { return isNum(v) ? v.toLocaleString('ko-KR') : '-'; }
   function fmtScore(v) { return isNum(v) ? v.toFixed(2) : '-'; }
+  function fmtSigned(v) { return isNum(v) ? (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(2) : '-'; }
 
   function cell(tag, text, cls) {
     var el = document.createElement(tag);
     el.textContent = text;
     if (cls) el.className = cls;
     return el;
+  }
+  function svg(tag, attrs, text) {
+    var el = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) el.setAttribute(k, attrs[k]);
+    if (text != null) el.textContent = text;
+    return el;
+  }
+
+  function renderChart(typeName) {
+    var years = data.years;
+    var sel = data.types[typeName] || {};
+    var tot = data.types['총계'];
+    var showTot = typeName !== '총계' && tot;
+    document.getElementById('lg-total').hidden = !showTot;
+    document.getElementById('chart-title').textContent = typeName + ' — 평균점수 추이';
+
+    var all = [];
+    [sel, showTot ? tot : null].forEach(function (t) {
+      if (t && Array.isArray(t.scores)) t.scores.forEach(function (v) { if (isNum(v)) all.push(v); });
+    });
+    if (!all.length) { chartEl.replaceChildren(); return; }
+    var lo = Math.floor((Math.min.apply(null, all) - 2) / 5) * 5;
+    var hi = Math.ceil((Math.max.apply(null, all) + 2) / 5) * 5;
+    var W = 640, H = 240, L = 34, R = 12, T = 16, B = 26;
+    function x(i) { return L + (W - L - R) * (years.length === 1 ? 0.5 : i / (years.length - 1)); }
+    function y(v) { return T + (H - T - B) * (1 - (v - lo) / (hi - lo)); }
+
+    var root = svg('svg', { viewBox: '0 0 ' + W + ' ' + H, role: 'img',
+      'aria-label': typeName + ' 연도별 평균점수 선 그래프' });
+    for (var g = lo; g <= hi; g += 5) {
+      root.appendChild(svg('line', { x1: L, x2: W - R, y1: y(g), y2: y(g), 'class': 'grid' }));
+      root.appendChild(svg('text', { x: L - 6, y: y(g) + 4, 'text-anchor': 'end' }, String(g)));
+    }
+    years.forEach(function (yr, i) {
+      root.appendChild(svg('text', { x: x(i), y: H - 8, 'text-anchor': 'middle' }, String(yr)));
+    });
+    function path(scores) {
+      var d = '';
+      scores.forEach(function (v, i) { if (isNum(v)) d += (d ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); });
+      return d;
+    }
+    if (showTot) root.appendChild(svg('path', { d: path(tot.scores), 'class': 'l-tot' }));
+    root.appendChild(svg('path', { d: path(sel.scores || []), 'class': 'l-sel' }));
+    (sel.scores || []).forEach(function (v, i) {
+      if (!isNum(v)) return;
+      var n = (sel.counts || [])[i];
+      var small = isNum(n) && n < smallN;
+      var c = svg('circle', { cx: x(i), cy: y(v), r: 4.5, 'class': 'pt' + (small ? ' small' : '') });
+      c.appendChild(svg('title', {}, years[i] + '년 ' + fmtScore(v) + '점 · ' + fmtCount(n) + '건' + (small ? ' (표본 적음)' : '')));
+      root.appendChild(c);
+    });
+    var last = (sel.scores || []).length - 1;
+    if (last >= 0 && isNum(sel.scores[last])) {
+      root.appendChild(svg('text', { x: x(last) - 8, y: y(sel.scores[last]) - 9, 'text-anchor': 'end', 'class': 'lbl' },
+        fmtScore(sel.scores[last])));
+    }
+    chartEl.replaceChildren(root);
+  }
+
+  function renderVerdicts(a) {
+    if (!a || !Array.isArray(a.verdicts) || !a.verdicts.length) return;
+    var focus = a.focus || [];
+    var tv = a.total_verdict;
+    document.getElementById('focus-hint').textContent =
+      (tv ? '총계 ' + tv.headline + '. ' : '') +
+      '판정 기준: 최근 연도 점수를 직전 ' + (a.params.baseline_years) + '년 평균과 비교해 ' +
+      a.params.warn_drop + '점 이하면 주의, ' + a.params.watch_drop + '점 이하이거나 2년 연속 하락이면 관찰. 카드를 누르면 아래 차트가 바뀝니다.';
+    verdictsEl.replaceChildren();
+    a.verdicts.forEach(function (v) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'verdict ' + (LEVEL_CLASS[v.level] || '');
+      b.dataset.type = v.type;
+      var top = document.createElement('div');
+      top.className = 'top';
+      top.appendChild(cell('span', v.level, 'badge'));
+      top.appendChild(cell('span', v.type, 'name'));
+      if (focus.indexOf(v.type) >= 0) top.appendChild(cell('span', '우선 점검 ' + (focus.indexOf(v.type) + 1), 'small-mark'));
+      b.appendChild(top);
+      b.appendChild(cell('div', v.headline, 'head'));
+      var ul = document.createElement('ul');
+      (v['for'] || []).forEach(function (r) { ul.appendChild(cell('li', '나빠짐 근거: ' + r)); });
+      (v.against || []).forEach(function (r) { ul.appendChild(cell('li', '반대 근거: ' + r)); });
+      if (ul.children.length) b.appendChild(ul);
+      b.addEventListener('click', function () { selectEl.value = v.type; render(v.type); });
+      verdictsEl.appendChild(b);
+    });
+    document.getElementById('focus-card').hidden = false;
+  }
+
+  function renderShiftShare(a) {
+    if (!a || !Array.isArray(a.shift_share) || !a.shift_share.length) return;
+    var rows = a.shift_share;
+    var max = 0;
+    rows.forEach(function (r) { max = Math.max(max, Math.abs(r.within), Math.abs(r.composition)); });
+    var ss = document.getElementById('ss');
+    ss.replaceChildren();
+    rows.forEach(function (r) {
+      var row = document.createElement('div');
+      row.className = 'ss-row';
+      row.appendChild(cell('span', String(r.year), 'bar-label'));
+      var track = document.createElement('div');
+      track.className = 'ss-track';
+      track.appendChild(cell('div', '', 'ss-mid'));
+      [['w', r.within], ['c', r.composition]].forEach(function (p) {
+        var bar = cell('div', '', 'ss-bar ' + p[0]);
+        var w = max > 0 ? Math.abs(p[1]) / max * 50 : 0;
+        bar.style.width = w + '%';
+        bar.style.left = (p[1] >= 0 ? 50 : 50 - w) + '%';
+        track.appendChild(bar);
+      });
+      row.appendChild(track);
+      row.appendChild(cell('span', fmtSigned(r.change), 'ss-val' + (r.change < 0 ? ' neg' : '')));
+      row.title = r.year + '년 총계 ' + fmtSigned(r.change) + '점 = 내부 ' + fmtSigned(r.within) +
+        ' + 구성 ' + fmtSigned(r.composition) + ' (하락 공종 ' + r.types_fell + '개)';
+      ss.appendChild(row);
+    });
+    // 가장 큰 변화 한 해를 숫자로 설명 (해석은 가설로만)
+    var big = rows.slice().sort(function (p, q) { return Math.abs(q.change) - Math.abs(p.change); })[0];
+    var nTypes = Object.keys(big.by_type || {}).length;
+    var txt = big.year + '년 총계 ' + fmtSigned(big.change) + '점 중 공종 내부 효과가 ' + fmtSigned(big.within) +
+      ', 구성 효과가 ' + fmtSigned(big.composition) + '입니다. 공종 ' + nTypes + '개 중 ' + big.types_fell + '개가 같은 해에 떨어졌습니다.';
+    if (big.change < 0 && big.types_fell === nTypes) {
+      txt += ' 모든 공종이 한꺼번에 떨어진 것은 평가 기준이나 방식이 바뀌었을 가능성을 시사합니다. 단, 이건 가설이며 이 자료만으로는 확인할 수 없습니다.';
+    }
+    var offset = rows.filter(function (r) { return Math.abs(r.change) < 0.5 && Math.abs(r.within) >= 0.5; })[0];
+    if (offset) {
+      txt += ' ' + offset.year + '년은 총계가 ' + fmtSigned(offset.change) + '로 거의 그대로지만, 내부 효과 ' +
+        fmtSigned(offset.within) + '를 구성 효과 ' + fmtSigned(offset.composition) + '가 상쇄했습니다.';
+    }
+    document.getElementById('ss-note').textContent = txt;
+    document.getElementById('ss-card').hidden = false;
   }
 
   function render(typeName) {
@@ -116,13 +323,21 @@
     var years = data.years;
 
     titleEl.textContent = typeName + ' — 연도별 평가건수·평균점수';
+    Array.prototype.forEach.call(verdictsEl.children, function (b) {
+      b.classList.toggle('sel', b.dataset.type === typeName);
+    });
+    renderChart(typeName);
 
     tbodyEl.replaceChildren();
     for (var i = 0; i < years.length; i++) {
       var tr = document.createElement('tr');
       tr.appendChild(cell('td', String(years[i])));
-      tr.appendChild(cell('td', fmtCount(counts[i]), 'num'));
+      var nc = cell('td', fmtCount(counts[i]), 'num');
+      if (isNum(counts[i]) && counts[i] < smallN) nc.appendChild(cell('span', '표본 적음', 'small-mark'));
+      tr.appendChild(nc);
       tr.appendChild(cell('td', fmtScore(scores[i]), 'num'));
+      var d = i > 0 && isNum(scores[i]) && isNum(scores[i - 1]) ? scores[i] - scores[i - 1] : null;
+      tr.appendChild(cell('td', d === null ? '-' : fmtSigned(d), 'num' + (d !== null && d < 0 ? ' neg' : '')));
       tbodyEl.appendChild(tr);
     }
 
@@ -168,6 +383,8 @@
       var names = Object.keys(json.types);
       if (names.length === 0) throw new Error('공종 없음');
       data = json;
+      var a = json.analysis;
+      if (a && a.params && isNum(a.params.small_n)) smallN = a.params.small_n;
 
       // "총계"를 맨 앞에 두고 기본 선택
       var idx = names.indexOf('총계');
@@ -184,6 +401,14 @@
         sourceEl.textContent = '데이터: ' + json.source;
         sourceEl.hidden = false;
       }
+      if (a && a.method_note) {
+        var m = document.getElementById('method');
+        m.textContent = '분석 방법: ' + a.method_note;
+        m.hidden = false;
+      }
+
+      try { renderVerdicts(a); } catch (e) { /* 분석 블록이 없어도 기본 화면은 보여준다 */ }
+      try { renderShiftShare(a); } catch (e) { }
 
       statusEl.hidden = true;
       contentEl.hidden = false;

@@ -143,5 +143,419 @@
         81.25
       ]
     }
+  },
+  "analysis": {
+    "params": {
+      "small_n": 10,
+      "baseline_years": 3,
+      "warn_drop": -3.0,
+      "watch_drop": -1.0
+    },
+    "weighted_check": [
+      {
+        "year": 2018,
+        "published": 75.91,
+        "weighted": 75.912,
+        "diff": 0.002,
+        "ok": true
+      },
+      {
+        "year": 2019,
+        "published": 64.96,
+        "weighted": 64.96,
+        "diff": -0.0,
+        "ok": true
+      },
+      {
+        "year": 2020,
+        "published": 70.65,
+        "weighted": 70.655,
+        "diff": 0.005,
+        "ok": true
+      },
+      {
+        "year": 2021,
+        "published": 70.54,
+        "weighted": 70.542,
+        "diff": 0.002,
+        "ok": true
+      },
+      {
+        "year": 2022,
+        "published": 77.61,
+        "weighted": 77.614,
+        "diff": 0.004,
+        "ok": true
+      },
+      {
+        "year": 2023,
+        "published": 80.76,
+        "weighted": 80.761,
+        "diff": 0.001,
+        "ok": true
+      },
+      {
+        "year": 2024,
+        "published": 79.58,
+        "weighted": 79.581,
+        "diff": 0.001,
+        "ok": true
+      },
+      {
+        "year": 2025,
+        "published": 76.46,
+        "weighted": 76.459,
+        "diff": -0.001,
+        "ok": true
+      }
+    ],
+    "shift_share": [
+      {
+        "year": 2019,
+        "change": -10.95,
+        "within": -12.08,
+        "composition": 1.12,
+        "residual": 0.0,
+        "published_change": -10.95,
+        "types_fell": 5,
+        "by_type": {
+          "건축(주거)": {
+            "within": -1.83,
+            "composition": -12.95
+          },
+          "건축(비주거)": {
+            "within": -3.65,
+            "composition": -13.38
+          },
+          "토목(교통시설)": {
+            "within": -2.01,
+            "composition": 10.28
+          },
+          "토목(수자원시설)": {
+            "within": -1.69,
+            "composition": 8.39
+          },
+          "토목(기타토목)": {
+            "within": -2.9,
+            "composition": 8.78
+          }
+        }
+      },
+      {
+        "year": 2020,
+        "change": 5.7,
+        "within": 5.32,
+        "composition": 0.38,
+        "residual": -0.0,
+        "published_change": 5.69,
+        "types_fell": 1,
+        "by_type": {
+          "건축(주거)": {
+            "within": 1.36,
+            "composition": 17.88
+          },
+          "건축(비주거)": {
+            "within": 0.14,
+            "composition": -4.89
+          },
+          "토목(교통시설)": {
+            "within": -0.15,
+            "composition": 0.92
+          },
+          "토목(수자원시설)": {
+            "within": 2.18,
+            "composition": -6.2
+          },
+          "토목(기타토목)": {
+            "within": 1.79,
+            "composition": -7.34
+          }
+        }
+      },
+      {
+        "year": 2021,
+        "change": -0.11,
+        "within": 0.89,
+        "composition": -1.0,
+        "residual": 0.0,
+        "published_change": -0.11,
+        "types_fell": 2,
+        "by_type": {
+          "건축(주거)": {
+            "within": 1.35,
+            "composition": -18.93
+          },
+          "건축(비주거)": {
+            "within": 1.04,
+            "composition": 3.3
+          },
+          "토목(교통시설)": {
+            "within": -0.66,
+            "composition": 3.37
+          },
+          "토목(수자원시설)": {
+            "within": -1.48,
+            "composition": 11.45
+          },
+          "토목(기타토목)": {
+            "within": 0.64,
+            "composition": -0.19
+          }
+        }
+      },
+      {
+        "year": 2022,
+        "change": 7.07,
+        "within": 6.68,
+        "composition": 0.39,
+        "residual": 0.0,
+        "published_change": 7.07,
+        "types_fell": 1,
+        "by_type": {
+          "건축(주거)": {
+            "within": -0.66,
+            "composition": 7.48
+          },
+          "건축(비주거)": {
+            "within": 1.45,
+            "composition": -2.74
+          },
+          "토목(교통시설)": {
+            "within": 2.96,
+            "composition": 3.73
+          },
+          "토목(수자원시설)": {
+            "within": 2.36,
+            "composition": -7.98
+          },
+          "토목(기타토목)": {
+            "within": 0.57,
+            "composition": -0.1
+          }
+        }
+      },
+      {
+        "year": 2023,
+        "change": 3.15,
+        "within": 2.01,
+        "composition": 1.14,
+        "residual": -0.0,
+        "published_change": 3.15,
+        "types_fell": 1,
+        "by_type": {
+          "건축(주거)": {
+            "within": 1.18,
+            "composition": -4.17
+          },
+          "건축(비주거)": {
+            "within": -1.35,
+            "composition": -1.52
+          },
+          "토목(교통시설)": {
+            "within": 1.44,
+            "composition": 11.94
+          },
+          "토목(수자원시설)": {
+            "within": 0.1,
+            "composition": -4.49
+          },
+          "토목(기타토목)": {
+            "within": 0.63,
+            "composition": -0.62
+          }
+        }
+      },
+      {
+        "year": 2024,
+        "change": -1.18,
+        "within": -0.92,
+        "composition": -0.26,
+        "residual": -0.0,
+        "published_change": -1.18,
+        "types_fell": 2,
+        "by_type": {
+          "건축(주거)": {
+            "within": 0.51,
+            "composition": -2.5
+          },
+          "건축(비주거)": {
+            "within": 0.31,
+            "composition": 5.1
+          },
+          "토목(교통시설)": {
+            "within": -1.92,
+            "composition": -0.76
+          },
+          "토목(수자원시설)": {
+            "within": -0.27,
+            "composition": -3.77
+          },
+          "토목(기타토목)": {
+            "within": 0.44,
+            "composition": 1.67
+          }
+        }
+      },
+      {
+        "year": 2025,
+        "change": -3.12,
+        "within": -2.48,
+        "composition": -0.64,
+        "residual": -0.0,
+        "published_change": -3.12,
+        "types_fell": 4,
+        "by_type": {
+          "건축(주거)": {
+            "within": -0.18,
+            "composition": -4.71
+          },
+          "건축(비주거)": {
+            "within": -1.1,
+            "composition": 2.44
+          },
+          "토목(교통시설)": {
+            "within": -0.96,
+            "composition": -10.48
+          },
+          "토목(수자원시설)": {
+            "within": 0.61,
+            "composition": 7.68
+          },
+          "토목(기타토목)": {
+            "within": -0.85,
+            "composition": 4.42
+          }
+        }
+      }
+    ],
+    "total_verdict": {
+      "type": "총계",
+      "level": "관찰",
+      "latest": 76.46,
+      "baseline": 79.32,
+      "delta": -2.86,
+      "yoy": -3.12,
+      "n_latest": 286,
+      "small_sample": false,
+      "headline": "2025년 76.46점, 직전 3년(2022–2024) 평균 79.32점 대비 -2.86점 (전년 대비 -3.12, 평가 286건)",
+      "for": [
+        "직전 3년 평균보다 2.86점 낮음",
+        "2023년부터 2년 연속 하락",
+        "전년 대비 -3.12점"
+      ],
+      "against": []
+    },
+    "verdicts": [
+      {
+        "type": "건축(비주거)",
+        "level": "주의",
+        "latest": 68.14,
+        "baseline": 74.78,
+        "delta": -6.64,
+        "yoy": -4.82,
+        "n_latest": 70,
+        "small_sample": false,
+        "headline": "2025년 68.14점, 직전 3년(2022–2024) 평균 74.78점 대비 -6.64점 (전년 대비 -4.82, 평가 70건)",
+        "for": [
+          "직전 3년 평균보다 6.64점 낮음",
+          "전년 대비 -4.82점"
+        ],
+        "against": []
+      },
+      {
+        "type": "토목(교통시설)",
+        "level": "주의",
+        "latest": 78.27,
+        "baseline": 82.87,
+        "delta": -4.6,
+        "yoy": -2.86,
+        "n_latest": 77,
+        "small_sample": false,
+        "headline": "2025년 78.27점, 직전 3년(2022–2024) 평균 82.87점 대비 -4.60점 (전년 대비 -2.86, 평가 77건)",
+        "for": [
+          "직전 3년 평균보다 4.60점 낮음",
+          "2023년부터 2년 연속 하락",
+          "전년 대비 -2.86점"
+        ],
+        "against": [
+          "여전히 총계 평균(76.46) 이상"
+        ]
+      },
+      {
+        "type": "토목(기타토목)",
+        "level": "관찰",
+        "latest": 81.25,
+        "baseline": 82.4,
+        "delta": -1.15,
+        "yoy": -4.41,
+        "n_latest": 63,
+        "small_sample": false,
+        "headline": "2025년 81.25점, 직전 3년(2022–2024) 평균 82.40점 대비 -1.15점 (전년 대비 -4.41, 평가 63건)",
+        "for": [
+          "직전 3년 평균보다 1.15점 낮음",
+          "전년 대비 -4.41점"
+        ],
+        "against": [
+          "여전히 총계 평균(76.46) 이상"
+        ]
+      },
+      {
+        "type": "건축(주거)",
+        "level": "정상",
+        "latest": 80.58,
+        "baseline": 77.83,
+        "delta": 2.75,
+        "yoy": -1.97,
+        "n_latest": 18,
+        "small_sample": false,
+        "headline": "2025년 80.58점, 직전 3년(2022–2024) 평균 77.83점 대비 +2.75점 (전년 대비 -1.97, 평가 18건)",
+        "for": [
+          "전년 대비 -1.97점"
+        ],
+        "against": [
+          "여전히 총계 평균(76.46) 이상",
+          "기준선보다 높거나 같음"
+        ]
+      },
+      {
+        "type": "토목(수자원시설)",
+        "level": "정상",
+        "latest": 77.61,
+        "baseline": 74.83,
+        "delta": 2.78,
+        "yoy": 4.01,
+        "n_latest": 58,
+        "small_sample": false,
+        "headline": "2025년 77.61점, 직전 3년(2022–2024) 평균 74.83점 대비 +2.78점 (전년 대비 +4.01, 평가 58건)",
+        "for": [],
+        "against": [
+          "여전히 총계 평균(76.46) 이상",
+          "기준선보다 높거나 같음"
+        ]
+      }
+    ],
+    "focus": [
+      "건축(비주거)",
+      "토목(교통시설)",
+      "토목(기타토목)"
+    ],
+    "small_samples": [
+      {
+        "type": "토목(교통시설)",
+        "year": 2018,
+        "count": 2
+      },
+      {
+        "type": "토목(수자원시설)",
+        "year": 2018,
+        "count": 7
+      },
+      {
+        "type": "토목(기타토목)",
+        "year": 2018,
+        "count": 8
+      }
+    ],
+    "method_note": "총계 변화는 중간점 shift-share로 '공종 내부 점수 변화'와 '공종 구성(건수 비중) 변화'로 나눈다. 두 효과의 합은 총계 변화와 같다. 원자료에 표준편차가 없어 신뢰구간은 계산하지 않고, 대신 건수가 적은 해를 표시한다."
   }
 }
