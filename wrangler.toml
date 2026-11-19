@@ -1,0 +1,9 @@
+# Cloudflare Pages 설정. 비밀값(GOOGLE_CLIENT_ID, ALLOWED_EMAILS, SESSION_SECRET)은 대시보드에만 있다.
+name = "conrisk-archina"
+pages_build_output_dir = "."
+compatibility_date = "2026-11-18"
+
+# 인증 등록 신청/승인 기록
+[[kv_namespaces]]
+binding = "ACCESS"
+id = "50189f76246e4e45a0a9e0c7605eeb58"

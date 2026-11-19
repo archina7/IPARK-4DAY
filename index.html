@@ -38,6 +38,11 @@
   .topbar .meta { display: flex; gap: 16px; align-items: center; font-size: 0.88rem; }
   .topbar .meta .pill { background: rgba(255,255,255,0.14); padding: 3px 10px; border-radius: 999px; }
   .topbar a { color: inherit; }
+  .topbar .admin-btn { text-decoration: none; border: 1px solid rgba(255,255,255,0.45); border-radius: 6px;
+    padding: 4px 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+  .topbar .admin-btn:hover { background: rgba(255,255,255,0.12); }
+  .topbar .admin-badge { background: #e5484d; color: #fff; border-radius: 999px; font-size: 0.78rem;
+    min-width: 20px; padding: 0 6px; text-align: center; }
 
   main { padding: 20px 32px 32px; max-width: 1800px; margin: 0 auto; }
   #status { color: var(--muted); }
@@ -163,6 +168,7 @@
   </div>
   <div class="meta">
     <span class="pill" id="latest-pill" hidden></span>
+    <a href="/admin" id="admin-link" class="admin-btn" hidden>인증 등록관리<span class="admin-badge" id="admin-badge" hidden></span></a>
     <a href="/logout">로그아웃</a>
   </div>
 </header>
@@ -611,6 +617,20 @@
         '로컬 웹 서버(예: VS Code Live Server, "python -m http.server")로 열어 주세요.');
     });
 })();
+
+// 관리자에게만 '인증 등록관리' 버튼과 승인 대기 건수를 보여준다
+fetch('/api/me', { headers: { Accept: 'application/json' } })
+  .then(function (r) { return r.ok ? r.json() : null; })
+  .then(function (me) {
+    if (!me || !me.admin) return;
+    document.getElementById('admin-link').hidden = false;
+    if (me.pending > 0) {
+      var b = document.getElementById('admin-badge');
+      b.textContent = me.pending;
+      b.hidden = false;
+    }
+  })
+  .catch(function () {});
 </script>
 </body>
 </html>
